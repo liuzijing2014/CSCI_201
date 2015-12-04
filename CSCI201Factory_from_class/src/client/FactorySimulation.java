@@ -37,7 +37,7 @@ public class FactorySimulation {
 	private double totalTime = 0.0;
 	
 	//For expanding Lock Lab
-	private Queue<FactoryWorker> line;
+	//private Queue<FactoryWorker> line;
 	
 	//instance constructor
 	{
@@ -46,7 +46,7 @@ public class FactorySimulation {
 		mFNodeMap = new HashMap<String, FactoryNode>();
 		
 		//For expanding Lock Lab
-		line = new LinkedBlockingQueue<FactoryWorker>();
+		//line = new LinkedBlockingQueue<FactoryWorker>();
 	}
 	
 	//For expanding Lock Lab
