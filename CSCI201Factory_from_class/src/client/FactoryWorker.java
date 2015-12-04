@@ -133,14 +133,16 @@ public class FactoryWorker extends FactoryObject implements Runnable, FactoryRep
 					if(mProductToMake == null) break; //No more tasks, end here
 				}
 				
-				/*DEPRECATED EXPANDING ON THIS FROM SEMAPHORES LAB
-				Navigate to the resourceroom door and enter
-				mDestinationNode = mFactorySimulation.getNode("Resourceroom");
-				mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
-				mNextNode = mShortestPath.pop();
-				atLocation.await();
-				FactoryResourceroomDoor rDoor = (FactoryResourceroomDoor)mDestinationNode.getObject();
-				rDoor.workerEnterResourceroom();*/
+				{
+					/*DEPRECATED EXPANDING ON THIS FROM SEMAPHORES LAB
+					Navigate to the resourceroom door and enter
+					mDestinationNode = mFactorySimulation.getNode("Resourceroom");
+					mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
+					mNextNode = mShortestPath.pop();
+					atLocation.await();
+					FactoryResourceroomDoor rDoor = (FactoryResourceroomDoor)mDestinationNode.getObject();
+					rDoor.workerEnterResourceroom();*/
+				}
 				
 				ArrayList<FactoryRobot> robots = new ArrayList<FactoryRobot>();
 				//We want to keep a separate list of Threads so that we can check if the robot has finished its task
@@ -181,13 +183,15 @@ public class FactoryWorker extends FactoryObject implements Runnable, FactoryRep
 					
 				}
 				
-				/*DEPRECATED EXPANDING ON THIS FROM SEMAPHORES LAB
-				Navigate back to the door and exit
-				mDestinationNode = mFactorySimulation.getNode("Resourceroom");
-				mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
-				mNextNode = mShortestPath.pop();
-				atLocation.await();
-				rDoor.workerLeaveResourceroom();*/
+				{
+					/*DEPRECATED EXPANDING ON THIS FROM SEMAPHORES LAB
+					Navigate back to the door and exit
+					mDestinationNode = mFactorySimulation.getNode("Resourceroom");
+					mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
+					mNextNode = mShortestPath.pop();
+					atLocation.await();
+					rDoor.workerLeaveResourceroom();*/
+				}
 				
 				//build the product
 				{

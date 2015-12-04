@@ -11,8 +11,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -34,12 +36,20 @@ public class FactorySimulation {
 	private boolean isDone = false;
 	private double totalTime = 0.0;
 	
+	//For expanding Lock Lab
+	private Queue<FactoryWorker> line;
+	
 	//instance constructor
 	{
 		mFObjects = new ArrayList<FactoryObject>();
 		mFWorkers = new ArrayList<FactoryWorker>();
 		mFNodeMap = new HashMap<String, FactoryNode>();
+		
+		//For expanding Lock Lab
+		line = new LinkedBlockingQueue<FactoryWorker>();
 	}
+	
+	//For expanding Lock Lab
 	
 	FactorySimulation(FactoryClientListener inClientListener, Factory inFactory, JTable inTable) {
 		mFClientListener = inClientListener;
