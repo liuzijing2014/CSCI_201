@@ -24,7 +24,7 @@ public class MySQLDriver {
 	
 	public void Connect() {
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/factory?user=root&password=root");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/factory?user=root&password=Steven!951208");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
