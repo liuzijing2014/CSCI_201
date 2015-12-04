@@ -1,0 +1,22 @@
+-- this file contains all of the information to configure the factory
+
+-- this is the name of the factory and the number of workers
+Factory Name|Computer Factory|6|15|15
+
+-- this is the location of the Task Board, where workers acquire tasks
+Task Board|14|0
+
+-- these are all of the resources in the factory with the quantity of each resource and location
+Resource|Motherboard|100|5|5
+Resource|Processor|100|6|5
+Resource|Hard Drive|100|6|6
+Resource|Memory|100|5|6
+Resource|Box|100|5|7
+
+-- these are the specific products we need to build with the quantity of each resource needed
+Product|Cheap Computer|2|Motherboard|1|Hard Drive|1|Memory|1|Box|1
+Product|Okay Computer|4|Motherboard|1|Processor|2|Hard Drive|1|Memory|4|Box|1
+Product|Good Computer|3|Motherboard|1|Processor|4|Hard Drive|2|Memory|8|Box|1
+Product|Amazing Computer|5|Motherboard|1|Processor|8|Hard Drive|2|Memory|16|Box|1
+Product|Cheap Server|9|Motherboard|1|Processor|4|Hard Drive|4|Memory|16|Box|1
+Product|Amazing Server|2|Motherboard|2|Processor|16|Hard Drive|8|Memory|32|Box|2
