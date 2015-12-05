@@ -120,14 +120,14 @@ public class FactoryManager implements Runnable , ChangeListener{
 		speed = source.getValue();
 	}
 	
-	public String deliver(Resource resource) {
-		String resourceName = "";
-		if(mFactorySimulation != null) {
-			if(mFactorySimulation.getMailBox() != null) {
-				mFactorySimulation.getMailBox().insert(resource);
-			}
-			resourceName = mFactorySimulation.getNeededResourceName();
-		}
-		return resourceName;
-	}
+//	public String deliver(Resource resource) {
+//		String resourceName = "";
+//		if(mFactorySimulation != null) {
+//			if(mFactorySimulation.getMailBox() != null) {
+//				mFactorySimulation.getMailBox().insert(resource);
+//			}
+//			resourceName = mFactorySimulation.getNeededResourceName();
+//		}
+//		return resourceName;
+//	}
 }

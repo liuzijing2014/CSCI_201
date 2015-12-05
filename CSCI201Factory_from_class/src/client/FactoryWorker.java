@@ -246,9 +246,18 @@ public class FactoryWorker extends FactoryObject implements Runnable, FactoryRep
 					mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
 					mNextNode = mShortestPath.pop();
 					atLocation.await();
-					mFactorySimulation.notifyServerProductMade(mProductToMake.getName());
+					//mFactorySimulation.notifyServerProductMade(mProductToMake.getName());
 					finished = new Timestamp(System.currentTimeMillis());
 					mFactorySimulation.getTaskBoard().endTask(mProductToMake);
+					//mProductToMake = null;
+					
+					//final 
+					mDestinationNode = mFactorySimulation.getNode("ProductBin");
+					mShortestPath = mCurrentNode.findShortestPath(mDestinationNode);
+					mNextNode = mShortestPath.pop();
+					atLocation.await();
+					FactoryProductBin mFactoryProductBin = ((FactoryProductBin)mDestinationNode.getObject());
+					mFactoryProductBin.addProduct(mProductToMake);
 					mProductToMake = null;
 				}
 			}

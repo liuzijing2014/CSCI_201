@@ -51,10 +51,10 @@ public class ServerClientCommunicator extends Thread {
 					line = line.substring(5);
 					serverListener.getFactoryWarehouse().requestResource(line);
 				}
-				else if(line.startsWith("Made:")) {
-					line = line.substring(5);
-					FactoryServer.updateResourceList(line);
-				}
+//				else if(line.startsWith("Made:")) {
+//					line = line.substring(5);
+//					FactoryServer.updateResourceList(line);
+//				}
 				line = br.readLine();
 			}
 		} catch (IOException ioe) {

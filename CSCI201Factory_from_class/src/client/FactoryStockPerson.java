@@ -25,7 +25,7 @@ public class FactoryStockPerson extends FactoryWorker {
 					mNextNode = mShortestPath.pop();
 					atLocation.await();
 					while(!mDestinationNode.aquireNode())Thread.sleep(1);
-					mProductToStock = mFactorySimulation.getMailBox().getStock();
+				//	mProductToStock = mFactorySimulation.getMailBox().getStock();
 					mImage = ImageLibrary.getImage(Constants.resourceFolder + "stockperson_box" + Constants.png);
 					Thread.sleep(1000);
 					mDestinationNode.releaseNode();

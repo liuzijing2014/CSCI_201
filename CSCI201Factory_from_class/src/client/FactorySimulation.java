@@ -36,6 +36,9 @@ public class FactorySimulation {
 	private boolean isDone = false;
 	private double totalTime = 0.0;
 	
+	//final
+	private FactoryProductBin mFactoryProductBin;
+	
 	//For expanding Lock Lab
 	//private Queue<FactoryWorker> line;
 	
@@ -85,7 +88,7 @@ public class FactorySimulation {
 		}
 		
 		//Create the mailbox
-		mMailBox = new FactoryMailbox(mFactory.getResources()); //Mailbox that can stock the factory resources
+		mMailBox = new FactoryMailbox(mFClientListener); //Mailbox that can stock the factory resources
 		mFObjects.add(mMailBox); //Add this object to be rendered
 		mFNodes[0][0].setObject(mMailBox); //Link this object to node 0,0
 		mFNodeMap.put("MailBox", mFNodes[0][0]); //Make it easy to find the mailbox node
@@ -163,12 +166,18 @@ public class FactorySimulation {
 			mFWorkers.add(fw);
 		}
 		
-		//Create some stockpersons
-		for(int i = 0; i < 3; ++i) {
-			FactoryStockPerson sp = new FactoryStockPerson(i, mFNodes[0][0], this);
-			mFObjects.add(sp);
-			mFWorkers.add(sp);
-		}
+//		//Create some stockpersons
+//		for(int i = 0; i < 3; ++i) {
+//			FactoryStockPerson sp = new FactoryStockPerson(i, mFNodes[0][0], this);
+//			mFObjects.add(sp);
+//			mFWorkers.add(sp);
+//		}
+		
+		mFactoryProductBin = new FactoryProductBin(new Rectangle(14, 5, 1, 1));
+		mFObjects.add(mFactoryProductBin);
+		mFNodes[14][5].setObject(mFactoryProductBin);
+		mFNodeMap.put("ProductBin", mFNodes[14][5]);
+		
 		
 		//Start all the FactoryWorkers
 		for(FactoryWorker fw : mFWorkers) fw.getThread().start();

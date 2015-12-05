@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import resource.Factory;
+import resource.Product;
 import resource.Resource;
 import utilities.Util;
 
@@ -17,6 +20,9 @@ public class FactoryClientListener extends Thread {
 	private FactoryManager mFManager;
 	private FactoryClientGUI mFClientGUI;
 	
+	//final 
+	private Queue<Product> toSend;
+	
 	public FactoryClientListener(FactoryManager inFManager, FactoryClientGUI inFClientGUI, Socket inSocket) {
 		mSocket = inSocket;
 		mFManager = inFManager;
@@ -26,8 +32,15 @@ public class FactoryClientListener extends Thread {
 		if (socketReady) {
 			start();
 		}
+		
+		toSend = new LinkedBlockingQueue<>();
 	}
 
+	public void addProductTosend(Product product)
+	{
+		toSend.add(product);
+	}
+	
 	private boolean initializeVariables() {
 		try {
 			ois = new ObjectInputStream(mSocket.getInputStream());
@@ -45,6 +58,8 @@ public class FactoryClientListener extends Thread {
 		pw.flush();
 	}
 	
+	
+	
 	public void run() {
 		try {
 			mFClientGUI.addMessage(Constants.waitingForFactoryConfigMessage);
@@ -57,13 +72,14 @@ public class FactoryClientListener extends Thread {
 					mFManager.loadFactory(factory, mFClientGUI.getTable());
 					mFClientGUI.addMessage(Constants.factoryReceived);
 					mFClientGUI.addMessage(factory.toString());
-				} else if(obj instanceof Resource) {
-					Resource toDeliver = (Resource)obj;
-					String resourceRequest = "Need:" + mFManager.deliver(toDeliver);
-					sendMessage(resourceRequest);
-					mFClientGUI.addMessage(Constants.resourceReceived);
-					mFClientGUI.addMessage(toDeliver.toString());
 				}
+//				} else if(obj instanceof Resource) {
+//					Resource toDeliver = (Resource)obj;
+//					String resourceRequest = "Need:" + mFManager.deliver(toDeliver);
+//					sendMessage(resourceRequest);
+//					mFClientGUI.addMessage(Constants.resourceReceived);
+//					mFClientGUI.addMessage(toDeliver.toString());
+//				}
 				
 			}
 		} catch (IOException ioe) {
