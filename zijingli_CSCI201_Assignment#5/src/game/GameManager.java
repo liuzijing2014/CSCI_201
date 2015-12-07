@@ -2,9 +2,12 @@ package game;
 
 import java.awt.Color;
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import customUI.CardDialog;
 import game.CardDeck.Card;
+import library.SoundLibrary;
 import networking.MessageConstants;
 import sorryclient.GamePanel;
 import sorryclient.OutMail;
@@ -55,6 +58,12 @@ public class GameManager {
 	//Selected tile for movement
 	Tile mSelectedTile;
 	
+	// setup timer
+	Timer timer;
+	String time = null;
+	boolean endTureByTimer = false;
+	boolean hold = false;
+	
 	//Load in the players, board, and card deck used for play
 	{
 		players = new Player[numPlayers];
@@ -92,7 +101,15 @@ public class GameManager {
 				mainPlayer = i;
 			}
 		}
+		if(currentPlaying == mainPlayer){
+			SoundLibrary.playStart();
+			time = "15";
+			mGamePanel.repaint();
+			timer = new Timer(false);
+			timer.schedule(new GameTimer(), 100, 1000);
+		}
 	}
+	
 	
 	//Returns number of pawns at the given player's start
 	public String getPlayerStartCount(int mPlayerNum) {
@@ -120,15 +137,20 @@ public class GameManager {
 	//Draw a card from the deck
 	public void drawCard() {
 		if(!canDraw) return;
+		if(livePlayers[currentPlaying].isActive()){
+			SoundLibrary.playDraw();
+		}
 		card = cardDeck.drawCard();
 		canDraw = false;
-		CardDialog.popup(card.getType());
+		if(mainPlayer == currentPlaying){
+			CardDialog.popup(card.getType());
+		}
 		//If the player cannot make a move, just skip
-		if(!canMakeMove()) endTurn();
+		if(!canMakeMove() && !endTureByTimer) endTurn();
 	}
 	
 	public void requestCardDrawn() {
-		if(mainPlayer != currentPlaying) return;
+		if(mainPlayer != currentPlaying || !canDraw) return;
 		OutMail.send(MessageConstants.BROADCAST, MessageConstants.DRAW_CARD);
 	}
 	
@@ -168,6 +190,13 @@ public class GameManager {
 	//End the player turn
 	private void endTurn() {
 		if(gameOver) return;
+		if(timer != null)
+		{
+			timer.cancel();
+			time = null;
+			timer = null;
+		}
+		endTureByTimer = false;
 		//Update the board graphically
 		mSelectedTile = null;
 		mGameBoard.resetSelections();
@@ -203,39 +232,76 @@ public class GameManager {
 					if(opponentPawn.getCurrentTile().isStart()) score += 1;
 				}
 			}
+			if(currentPlaying == mainPlayer){
+				SoundLibrary.playWin();
+			}
+			else{
+				SoundLibrary.playLose();
+			}
 			mGamePanel.endGame(winnerName, score);
 			return;
 		}
 		
 		//If the card was a two, let the player have another turn
 		//Otherwise advance
-		if(card.getType() != CardDeck.TWO) {
-			//tell the server we are done
+		if(card != null)
+		{
+			if(card.getType() != CardDeck.TWO) {
+				//tell the server we are done
+				if(currentPlaying == mainPlayer) {
+					OutMail.send(MessageConstants.BROADCAST, MessageConstants.END_TURN);
+				} else if (!livePlayers[currentPlaying].isActive()) {
+					nextPlayer();
+				}
+			} else if(!livePlayers[currentPlaying].isActive()) {
+				if(!gameOver){
+					simulatePlayer(livePlayers[currentPlaying]);
+				}
+			}
+			else {
+				if(currentPlaying == mainPlayer){
+					time = "15";
+					mGamePanel.repaint();
+					timer = new Timer(false);
+					timer.schedule(new GameTimer(), 100, 1000);
+				}
+			}
+		}
+		else
+		{
 			if(currentPlaying == mainPlayer) {
 				OutMail.send(MessageConstants.BROADCAST, MessageConstants.END_TURN);
 			} else if (!livePlayers[currentPlaying].isActive()) {
 				nextPlayer();
 			}
-		} else if(!livePlayers[currentPlaying].isActive()) {
-			if(!gameOver)
-			simulatePlayer(livePlayers[currentPlaying]);
 		}
-		
 		//Clean up for next player
 		clean();
 		set();
 		card = null;
 	}
 	
+	
+	
 	public void nextPlayer() {
+		canDraw = true;
 		currentPlaying++;
 		currentPlaying %= livePlayers.length;
-		
+			
 		//Simulate the other players if they are a robot
 		//System.out.println("Checking if " + livePlayers[currentPlaying].getColor() + "is active");
 		if(!livePlayers[currentPlaying].isActive()) {
 			if(!gameOver)
 			simulatePlayer(livePlayers[currentPlaying]);
+		}
+		else{
+			if(currentPlaying == mainPlayer){
+				SoundLibrary.playStart();
+				time = "15";
+				mGamePanel.repaint();
+				timer = new Timer(false);
+				timer.schedule(new GameTimer(), 100, 1000);
+			}
 		}
 	}
 
@@ -334,12 +400,13 @@ public class GameManager {
 		if(card.getType() == CardDeck.SEVEN && sevenRemainder != -1) {
 			Tile endTile = travel(tile, pawn, sevenRemainder);
 			if(endTile == null) return false;
+			annimation(tile, pawn, sevenRemainder);
 			endTile = slide(endTile,pawn);
 			if(endTile.isOccupiedByColor(pawn.getColor())) {
 				if(endTile.getPawn() != pawn) return false;
 			}
 			if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-			tile.removePawn();
+			//tile.removePawn();
 			if(!endTile.isHome()){
 				endTile.setPawn(pawn);
 			} else pawn.setCurrentTile(endTile);
@@ -352,13 +419,14 @@ public class GameManager {
 			card.getType() == CardDeck.EIGHT || card.getType() == CardDeck.TWELVE ) {
 			Tile endTile = travel(tile, pawn, CardDeck.getValue(card));
 			if(endTile == null) return false;
+			annimation(tile, pawn, CardDeck.getValue(card));
 			Tile beforeTile = endTile;
 			endTile = slide(endTile,pawn);
 			if(endTile.isOccupiedByColor(pawn.getColor())) {
 				if(endTile.getPawn() != pawn) return false;
 			}
 			if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-			tile.removePawn();
+			//tile.removePawn();
 			if(!endTile.isHome()){
 				endTile.setPawn(pawn);
 			} else pawn.setCurrentTile(endTile);
@@ -367,13 +435,14 @@ public class GameManager {
 		else if (card.getType() == CardDeck.FOUR){
 			Tile endTile = travel(tile, pawn, -CardDeck.getValue(card));
 			if(endTile == null) return false;
+			annimation(tile, pawn, -CardDeck.getValue(card));
 			Tile beforeTile = endTile;
 			endTile = slide(endTile,pawn);
 			if(endTile.isOccupiedByColor(pawn.getColor())) {
 				if(endTile.getPawn() != pawn) return false;
 			}
 			if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-			tile.removePawn();
+			//tile.removePawn();
 			if(!endTile.isHome()){
 				endTile.setPawn(pawn);
 			} else pawn.setCurrentTile(endTile);
@@ -463,13 +532,14 @@ public class GameManager {
 				else sevenRemainder = 7 - n;
 				Tile endTile = travel(tile, pawn, n);
 				if(endTile == null) return false;
+				annimation(tile, pawn, n);
 				Tile beforeTile = endTile;
 				endTile = slide(endTile,pawn);
 				if(endTile.isOccupiedByColor(pawn.getColor())) {
 					if(endTile.getPawn() != pawn) return false;
 				}
 				if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-				tile.removePawn();
+				//tile.removePawn();
 				if(!endTile.isHome()){
 					endTile.setPawn(pawn);
 				} else pawn.setCurrentTile(endTile);
@@ -514,15 +584,17 @@ public class GameManager {
 			if(!livePlayers[currentPlaying].isActive()){
 				//Robots will move forward if possible
 				if(canMoveForward) {
+					annimation(tile, pawn, 10);
 					if(endTileForward.isOccupied()) players[GameHelpers.getIndexFromColor(endTileForward.getPawnColor())].returnPawn(endTileForward.getPawn());
-					tile.removePawn();
+					//tile.removePawn();
 					if(!endTileForward.isHome()){
 						endTileForward.setPawn(pawn);
 					}else pawn.setCurrentTile(endTileForward);
 					if(beforeTileForward != endTileForward) slideRemove(beforeTileForward, pawn.getColor());
 				} else {
+					annimation(tile, pawn, -1);
 					if(endTileBackward.isOccupied()) players[GameHelpers.getIndexFromColor(endTileBackward.getPawnColor())].returnPawn(endTileBackward.getPawn());
-					tile.removePawn();
+					//tile.removePawn();
 					if(!endTileBackward.isHome()){
 						endTileBackward.setPawn(pawn);
 					}else pawn.setCurrentTile(endTileBackward);
@@ -548,15 +620,17 @@ public class GameManager {
 				else if(canMoveBackwards) n = -1;
 				//Human selected forward (or is forced to)
 				if(n == 0) {
+					annimation(tile, pawn, 10);
 					if(endTileForward.isOccupied()) players[GameHelpers.getIndexFromColor(endTileForward.getPawnColor())].returnPawn(endTileForward.getPawn());
-					tile.removePawn();
+					//tile.removePawn();
 					if(!endTileForward.isHome()){
 						endTileForward.setPawn(pawn);
 					}else pawn.setCurrentTile(endTileForward);
 					if(beforeTileForward != endTileForward) slideRemove(beforeTileForward, pawn.getColor());
 				} else { //Human selected backward (or is forced to)
+					annimation(tile, pawn, -1);
 					if(endTileBackward.isOccupied()) players[GameHelpers.getIndexFromColor(endTileBackward.getPawnColor())].returnPawn(endTileBackward.getPawn());
-					tile.removePawn();
+					//tile.removePawn();
 					if(!endTileBackward.isHome()){
 						endTileBackward.setPawn(pawn);
 					}else pawn.setCurrentTile(endTileBackward);
@@ -592,8 +666,9 @@ public class GameManager {
 			}
 			if(canMoveForward && !canSwap) {
 				//If the pawn can move forward, but can't swap just move it forward
+				annimation(tile, pawn, 11);
 				if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-				tile.removePawn();
+				//tile.removePawn();
 				if(!endTile.isHome()){
 					endTile.setPawn(pawn);
 				} else pawn.setCurrentTile(endTile);
@@ -603,8 +678,9 @@ public class GameManager {
 				//if(currentPlaying != mainPlayer) {
 				if(!livePlayers[currentPlaying].isActive()) {
 					if(canMoveForward) {
+						annimation(tile, pawn, 11);
 						if(endTile.isOccupied()) players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
-						tile.removePawn();
+						//tile.removePawn();
 						if(!endTile.isHome()){
 							endTile.setPawn(pawn);
 						} else pawn.setCurrentTile(endTile);
@@ -632,10 +708,11 @@ public class GameManager {
 					} else {
 					*/
 						//Chose to move, simply move forward 11
+					annimation(tile, pawn, 11);
 						if(endTile.isOccupied()) {
 							players[GameHelpers.getIndexFromColor(endTile.getPawnColor())].returnPawn(endTile.getPawn());
 						}
-						tile.removePawn();
+						//tile.removePawn();
 						if(!endTile.isHome()){
 							endTile.setPawn(pawn);
 						} else pawn.setCurrentTile(endTile);
@@ -1063,6 +1140,39 @@ public class GameManager {
 		}
 		return distance;
 	}
+	
+	private void annimation(Tile tile, Pawn toMove, int num){
+		if(timer != null) hold = true;
+		
+		boolean back = num < 0;
+		num = Math.abs(num);
+		boolean set = true;
+		Tile from = tile;
+		for(int i = 0; i<num; ++i){
+			try {
+				if(set) Thread.sleep(250);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			if(set) from = tile;
+			
+			if(back) tile = tile.getPrevious();
+			else tile = tile.getNext(toMove.getColor());
+			
+			if(tile.isOccupied()) set = false;
+			else {
+				set = true;
+				from.removePawn();
+				tile.setPawn(toMove);
+			}
+			
+			mGamePanel.redraw();
+		}
+		
+		if(timer != null) hold = false;
+	}
+	
 
 	private void highlightTilesForward(Tile from, Tile to, Color color) {
 		Tile tempTile = from;
@@ -1110,12 +1220,22 @@ public class GameManager {
 	}
 
 	public void deactivatePlayer(String name) {
+		if(name.equals(" "))
+		{
+			return;
+		}
+		else
+		{
+			System.out.println("name:" + name + "//");
+		}
 		int index = GameHelpers.getIndexFromColorName(name);
 		players[index].deactivate();
 		//System.out.println(players[index].getColor() + "has been deactivated");
-		if(players[index] == livePlayers[currentPlaying]) {
-			//System.out.println("The player currently playing d/ced!");
-			simulatePlayer(players[index]);
+		if(livePlayers != null){		
+			if(players[index] == livePlayers[currentPlaying]) {
+				//System.out.println("The player currently playing d/ced!");
+				simulatePlayer(players[index]);
+			}
 		}
 	}
 
@@ -1123,4 +1243,38 @@ public class GameManager {
 		return card.getType() == CardDeck.SORRY;
 	}
 	
+	class GameTimer extends TimerTask
+	{
+		public static final int endTime = 15;
+		private int countTime = 0;
+	
+		@Override
+		public void run() {
+			// when time runs out, exit the program
+			if(countTime == endTime ){
+				endTureByTimer = true;
+				CardDialog.shutdown();
+				endTurn();
+			}
+			else{
+				if(!hold){
+					++countTime;
+					if(countTime > 5)
+					{
+						time = "0" + Integer.toString(endTime - countTime);
+					}
+					else{
+						time = Integer.toString(endTime - countTime);
+					}
+					mGamePanel.repaint();
+				}
+			}
+		}
+	}
+	
+	public String getTime()
+	{
+		return time;
+	}
+
 }

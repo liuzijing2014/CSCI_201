@@ -44,6 +44,7 @@ public class GamePanel extends JPanel {
 	
 	private final Image gameLogo;
 	
+	
 	{
 		cardButton = new PaintedButton("", ImageLibrary.getImage("images/cards/cardBack_red.png"), ImageLibrary.getImage("images/cards/cardBack_red.png"), 0);
 		cardButton.addActionListener(new ActionListener() {
@@ -112,13 +113,15 @@ public class GamePanel extends JPanel {
 				"Please enter your name",
 				"Score Entry " + score,
 				JOptionPane.NO_OPTION);
-		if(name.length() < 3) 
-			JOptionPane.showMessageDialog(
-					null, 
-					"Name must be longer than 3 characters and contain no whitespace!", 
-					"Sorry!", 
-					JOptionPane.ERROR_MESSAGE
-				);
+		if(name != null){
+			if(name.length() < 3) 
+				JOptionPane.showMessageDialog(
+						null, 
+						"Name must be longer than 3 characters and contain no whitespace!", 
+						"Sorry!", 
+						JOptionPane.ERROR_MESSAGE
+					);
+			}
 		}
 		
 		try {
@@ -141,6 +144,11 @@ public class GamePanel extends JPanel {
 		g.setColor(Color.LIGHT_GRAY);
 		g.drawRect(0, 0, getWidth(), getHeight());
 		g.drawImage(gameLogo, getWidth()/3, getHeight()/4, getWidth()/3,getHeight()/6, null);
+		if(mGameManager.getTime() != null){
+			g.setFont(FontLibrary.getFont("fonts/kenvector_future.ttf", Font.PLAIN, 28));
+			g.setColor(Color.black);
+			g.drawString("Time 0:"+mGameManager.getTime(), getWidth()*2/5, getHeight()* 3/5);
+		}
 	}
 	
 	class TilePanel extends PaintedPanel {

@@ -43,4 +43,8 @@ public class OutMail implements Runnable{
 		running = false;
 	}
 	
+	public static void disconnect(){
+		outBox.shutDown();
+	}
+	
 }

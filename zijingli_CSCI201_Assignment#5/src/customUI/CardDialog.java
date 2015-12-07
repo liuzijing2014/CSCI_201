@@ -28,6 +28,8 @@ public class CardDialog extends JDialog {
 	private final JLabel name;
 	private final JTextArea text;
 	
+	private static CardDialog toShow = null;
+	
 	static {
 		cardDialogs = new HashMap<Integer,CardDialog>();
 		background = ImageLibrary.getImage("images/cards/card_brown.png");
@@ -74,9 +76,16 @@ public class CardDialog extends JDialog {
 	}
 	
 	public static void popup(int type) {
-		CardDialog toShow = cardDialogs.get(type);
+		toShow = cardDialogs.get(type);
 		toShow.setLocationRelativeTo(null);
 		toShow.setVisible(true);
+	}
+	
+	public static void shutdown()
+	{
+		if(toShow != null){
+			toShow.setVisible(false);
+		}
 	}
 	
 	CardDialog(String inName, String inText) {

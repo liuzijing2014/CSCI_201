@@ -109,6 +109,7 @@ public class ClientPanel extends JPanel implements Listener {
 		if(msg.contains(MessageConstants.JOIN+MessageConstants.SUCCESS)) {
 			swap(colorSelect);
 			colorSelect.colorReserve(split[2]);
+			colorSelect.startTimer();
 		}
 		if(msg.equals(MessageConstants.HOST+MessageConstants.SUCCESS)) {
 			swap(numPlayerSelect);

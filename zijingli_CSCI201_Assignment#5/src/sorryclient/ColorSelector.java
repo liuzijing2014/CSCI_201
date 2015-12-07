@@ -7,10 +7,13 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import customUI.ClearPanel;
@@ -32,15 +35,21 @@ public class ColorSelector extends PaintedPanel{
 	private final PaintedButton confirmButton;
 	
 	private final static String selectColorString = "Select your color";
+	private final static String time = "Time 0:";
 	
 	private final static String[] colorNames = {"Red", "Blue", "Green", "Yellow"};
 	//private final static Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
 	
-	private final static Insets spacing = new Insets(60,80,60,80);
+	private final static Insets spacing = new Insets(45,80,60,80);
+	
+	// For update timer
+	private JLabel timerLabel;
+	private Timer timer;
 	
 	public Color getPlayerColor() {
 		return selection;
 	}
+	
 	
 	public ColorSelector(ActionListener confirmAction, Image inImage) {
 		super(inImage,true);
@@ -51,7 +60,23 @@ public class ColorSelector extends PaintedPanel{
 				22
 				);
 		confirmButton.addActionListener(confirmAction);
+		confirmButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				timer.cancel();
+			}
+		});
 		confirmButton.setEnabled(false);
+		
+		JPanel timerPanel = new JPanel();
+		timerPanel.setOpaque(false);
+		timerLabel = new JLabel(time);
+		//timerLabel.setHorizontalAlignment(JLabel.CENTER);
+		timerLabel.setFont(FontLibrary.getFont("fonts/kenvector_future_thin.ttf", Font.PLAIN, 28));
+		timerPanel.add(timerLabel);
+		timerPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
+		timerLabel.setVisible(false);
 		
 		JLabel selectColorLabel = new JLabel(selectColorString);
 		selectColorLabel.setFont(FontLibrary.getFont("fonts/kenvector_future_thin.ttf", Font.PLAIN, 28));
@@ -94,12 +119,22 @@ public class ColorSelector extends PaintedPanel{
 		bottomPanel.add(Box.createGlue());
 		bottomPanel.add(Box.createGlue());
 		bottomPanel.add(confirmButton);
-		
+
 		setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
-		
+		add(timerPanel);
 		add(topPanel);
 		add(centerPanel);
 		add(bottomPanel);
+		
+		timer = new Timer(false);
+	}
+	
+	// begin counting
+	public void startTimer()
+	{
+		timerLabel.setVisible(true);
+		// setup timer
+		timer.schedule(new CountDownTimer(), 500, 1000);
 	}
 	
 	public void colorReserve(String colors) {
@@ -133,5 +168,33 @@ public class ColorSelector extends PaintedPanel{
 			}
 		}
 	}
-
+	
+	class CountDownTimer extends TimerTask
+	{
+		public static final int endTime = 30;
+		private int countTime = 0;
+		private Color[] colorList = {Color.black, Color.red};
+		@Override
+		public void run() {
+			// when time runs out, exit the program
+			if(countTime == endTime){
+				System.exit(0);
+			}
+			else{
+				++countTime;
+				if(countTime >20 ){
+					swapColor();
+					timerLabel.setText(time + "0" + (endTime - countTime));
+				}
+				else{
+					timerLabel.setText(time + (endTime - countTime));
+				}
+			}
+		}
+		
+		private void swapColor()
+		{
+			timerLabel.setForeground(colorList[countTime%2]);
+		}
+	}
 }
