@@ -101,7 +101,7 @@ public class GameManager {
 				mainPlayer = i;
 			}
 		}
-		if(currentPlaying == mainPlayer){
+		{
 			SoundLibrary.playStart();
 			time = "15";
 			mGamePanel.repaint();
@@ -143,6 +143,12 @@ public class GameManager {
 		card = cardDeck.drawCard();
 		canDraw = false;
 		if(mainPlayer == currentPlaying){
+			if(!canMakeMove()) {
+				timer.cancel();
+				timer = null;
+				time = null;
+				mGamePanel.repaint();
+			}
 			CardDialog.popup(card.getType());
 		}
 		//If the player cannot make a move, just skip
@@ -259,12 +265,10 @@ public class GameManager {
 				}
 			}
 			else {
-				if(currentPlaying == mainPlayer){
-					time = "15";
-					mGamePanel.repaint();
-					timer = new Timer(false);
-					timer.schedule(new GameTimer(), 100, 1000);
-				}
+				time = "15";
+				mGamePanel.repaint();
+				timer = new Timer(false);
+				timer.schedule(new GameTimer(), 100, 1000);
 			}
 		}
 		else
@@ -285,6 +289,11 @@ public class GameManager {
 	
 	public void nextPlayer() {
 		canDraw = true;
+		if(timer != null){
+			timer.cancel();
+			timer = null;
+			time = null;
+		}
 		currentPlaying++;
 		currentPlaying %= livePlayers.length;
 			
@@ -295,13 +304,11 @@ public class GameManager {
 			simulatePlayer(livePlayers[currentPlaying]);
 		}
 		else{
-			if(currentPlaying == mainPlayer){
-				SoundLibrary.playStart();
-				time = "15";
-				mGamePanel.repaint();
-				timer = new Timer(false);
-				timer.schedule(new GameTimer(), 100, 1000);
-			}
+			SoundLibrary.playStart();
+			time = "15";
+			mGamePanel.repaint();
+			timer = new Timer(false);
+			timer.schedule(new GameTimer(), 100, 1000);
 		}
 	}
 
@@ -1251,7 +1258,7 @@ public class GameManager {
 		@Override
 		public void run() {
 			// when time runs out, exit the program
-			if(countTime == endTime ){
+			if(countTime == endTime && currentPlaying == mainPlayer){
 				endTureByTimer = true;
 				CardDialog.shutdown();
 				endTurn();
